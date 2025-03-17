@@ -2,10 +2,15 @@
 {% block title %}Результаты голосования{% endblock %}
 {% block content %}
 <h2>Результаты голосования</h2>
-{% if message %}
-    <p>{{ message }}</p>
+
+{% if results %}
+    <ul>
+        {% for option, count in results.items() %}
+            <li><strong>{{ option }}:</strong> {{ count }} голосов</li>
+        {% endfor %}
+    </ul>
 {% else %}
-    <p>Всего голосов: {{ total_votes }}</p>
-    <p>Голоса "За": {{ result }}</p>
+    <p>Голосов пока нет</p>
 {% endif %}
+
 {% endblock %}

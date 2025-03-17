@@ -3,8 +3,10 @@
 {% block content %}
 <h2>{{ title }}</h2>
 <form method="post">
-    <label><input type="radio" name="choice" value="1" required> Да</label><br>
-    <label><input type="radio" name="choice" value="0" required> Нет</label><br>
+    {% for option in options %}
+        <label><input type="radio" name="option" value="{{ option[0] }}" required> {{ option[1] }}</label><br>
+    {% endfor %}
+    <br>
     <button type="submit">Голосовать</button>
 </form>
 {% endblock %}

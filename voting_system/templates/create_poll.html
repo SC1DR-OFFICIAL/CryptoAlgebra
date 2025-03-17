@@ -1,10 +1,32 @@
 {% extends "base.html" %}
-{% block title %}Создание голосования{% endblock %}
+{% block title %}Создать голосование{% endblock %}
 {% block content %}
-<h2>Создать новое голосование</h2>
+<h2>Создание голосования</h2>
 <form method="post">
-    <label>Название: <input type="text" name="title" required></label><br>
-    <label>Дата окончания: <input type="datetime-local" name="end_date" required></label><br>
+    <label>Название голосования:</label>
+    <input type="text" name="title" required><br><br>
+
+    <label>Дата окончания голосования:</label>
+    <input type="datetime-local" name="end_date" required><br><br>
+
+    <label>Варианты ответов:</label>
+    <div id="options">
+        <input type="text" name="options" required>
+    </div>
+    <button type="button" onclick="addOption()">Добавить вариант</button><br><br>
+
     <button type="submit">Создать</button>
 </form>
+
+<script>
+function addOption() {
+    let div = document.getElementById("options");
+    let input = document.createElement("input");
+    input.type = "text";
+    input.name = "options";
+    input.required = true;
+    div.appendChild(document.createElement("br"));
+    div.appendChild(input);
+}
+</script>
 {% endblock %}

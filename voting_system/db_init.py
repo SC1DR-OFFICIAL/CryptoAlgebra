@@ -1,6 +1,5 @@
 import sqlite3
 
-# Создаём базу данных и таблицы
 conn = sqlite3.connect('election.db')
 cursor = conn.cursor()
 
@@ -19,9 +18,18 @@ CREATE TABLE IF NOT EXISTS poll (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     end_date TEXT NOT NULL,
-    public_key_n TEXT,  -- Храним как текст
+    public_key_n TEXT,
     public_key_g TEXT,
     private_key TEXT
+)''')
+
+# Таблица вариантов ответов
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS poll_options (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    poll_id INTEGER NOT NULL,
+    option_text TEXT NOT NULL,
+    FOREIGN KEY(poll_id) REFERENCES poll(id)
 )''')
 
 # Таблица голосов
@@ -30,13 +38,16 @@ CREATE TABLE IF NOT EXISTS vote (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     poll_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
+    option_id INTEGER NOT NULL,
     encrypted_vote TEXT NOT NULL,
     FOREIGN KEY(poll_id) REFERENCES poll(id),
-    FOREIGN KEY(user_id) REFERENCES user(id)
+    FOREIGN KEY(user_id) REFERENCES user(id),
+    FOREIGN KEY(option_id) REFERENCES poll_options(id)
 )''')
 
 conn.commit()
-print("База данных создана.")
+conn.close()
+print("База данных обновлена.")
 
 # Проверяем, есть ли пользователь 'Aleksandr'
 cursor.execute("SELECT id FROM user WHERE username = ?", ('Aleksandr',))
