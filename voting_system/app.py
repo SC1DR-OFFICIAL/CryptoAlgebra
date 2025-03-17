@@ -14,11 +14,11 @@ app.secret_key = 'secret_key_for_session'
 def index():
     conn = sqlite3.connect('election.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, title, end_date FROM poll")  # Запросим end_date тоже
+    cursor.execute("SELECT id, title, end_date FROM poll")  # Получаем дату окончания
     polls = cursor.fetchall()
     conn.close()
 
-    now = datetime.datetime.now().isoformat()  # Текущая дата в формате строки
+    now = datetime.datetime.now().isoformat()  # Текущая дата в ISO-формате
     return render_template('index.html', polls=polls, now=now)
 
 
