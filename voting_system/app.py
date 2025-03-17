@@ -109,7 +109,7 @@ def vote(poll_id):
     cursor = conn.cursor()
 
     # Получаем информацию о голосовании
-    cursor.execute("SELECT title, public_key_n FROM poll WHERE id=?", (poll_id,))
+    cursor.execute("SELECT title, public_key_n, end_date FROM poll WHERE id=?", (poll_id,))
     poll = cursor.fetchone()
     cursor.execute("SELECT id, option_text FROM poll_options WHERE poll_id=?", (poll_id,))
     options = cursor.fetchall()
@@ -118,29 +118,40 @@ def vote(poll_id):
         conn.close()
         return "Голосование не найдено", 404
 
-    title, public_key_n = poll
+    title, public_key_n, end_date = poll
+
+    # Проверяем, завершено ли голосование
+    current_time = datetime.datetime.now().isoformat()
+    is_closed = current_time >= end_date
 
     # Проверяем, голосовал ли пользователь
-    cursor.execute("SELECT 1 FROM vote WHERE poll_id=? AND user_id=?", (poll_id, user_id))
-    already_voted = cursor.fetchone()
-
-    if already_voted:
-        conn.close()
-        return redirect(url_for('index'))  # ✅ Если уже голосовал, сразу редирект на главную
+    cursor.execute("SELECT option_id FROM vote WHERE poll_id=? AND user_id=?", (poll_id, user_id))
+    previous_vote = cursor.fetchone()
 
     if request.method == 'POST':
+        if is_closed:
+            conn.close()
+            return "Голосование уже завершено."
+
         option_id = int(request.form['option'])
         public_key = paillier.PaillierPublicKey(n=int(public_key_n))
         encrypted_vote = public_key.encrypt(1)  # ✅ Голос за вариант (1)
 
-        cursor.execute("INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote) VALUES (?, ?, ?, ?)",
-                       (poll_id, user_id, option_id, str(encrypted_vote.ciphertext())))
+        if previous_vote:
+            # ✅ Если голос уже был, обновляем его
+            cursor.execute("UPDATE vote SET option_id=?, encrypted_vote=? WHERE poll_id=? AND user_id=?",
+                           (option_id, str(encrypted_vote.ciphertext()), poll_id, user_id))
+        else:
+            # ✅ Если голосов нет, создаем новый
+            cursor.execute("INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote) VALUES (?, ?, ?, ?)",
+                           (poll_id, user_id, option_id, str(encrypted_vote.ciphertext())))
+
         conn.commit()
         conn.close()
-        return redirect(url_for('index'))  # ✅ После голосования перенаправляем на главную
+        return redirect('/')
 
     conn.close()
-    return render_template('vote.html', title=title, poll_id=poll_id, options=options)
+    return render_template('vote.html', title=title, poll_id=poll_id, options=options, previous_vote=previous_vote)
 
 
 # Вывод результатов голосования (для администратора)
