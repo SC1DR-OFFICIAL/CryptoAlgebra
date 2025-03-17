@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from encryption import generate_homomorphic_keypair, serialize_private_key, deserialize_private_key
@@ -126,22 +126,22 @@ def vote(poll_id):
 
     if already_voted:
         conn.close()
-        return "Вы уже проголосовали."
+        return redirect(url_for('index'))  # ✅ Если уже голосовал, сразу редирект на главную
 
     if request.method == 'POST':
         option_id = int(request.form['option'])
         public_key = paillier.PaillierPublicKey(n=int(public_key_n))
-        encrypted_vote = public_key.encrypt(1)  # ✅ Голос за выбранный вариант (1)
+        encrypted_vote = public_key.encrypt(1)  # ✅ Голос за вариант (1)
 
-        # ✅ Сохраняем `ciphertext` как строку в БД
         cursor.execute("INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote) VALUES (?, ?, ?, ?)",
                        (poll_id, user_id, option_id, str(encrypted_vote.ciphertext())))
         conn.commit()
         conn.close()
-        return "Голос принят"
+        return redirect(url_for('index'))  # ✅ После голосования перенаправляем на главную
 
     conn.close()
     return render_template('vote.html', title=title, poll_id=poll_id, options=options)
+
 
 
 # Вывод результатов голосования (для администратора)
