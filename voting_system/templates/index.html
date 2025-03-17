@@ -4,7 +4,11 @@
 <h1>Доступные голосования</h1>
 <ul>
     {% for poll in polls %}
-        <li><a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a></li>
+        {% if poll[2] and poll[2] >= now %}
+            <li><a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a></li>
+        {% else %}
+            <li>{{ poll[1] }} - <strong>Голосование завершено</strong></li>
+        {% endif %}
     {% endfor %}
 </ul>
 {% endblock %}

@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Результаты голосования{% endblock %}
 {% block content %}
-<h2>Результаты: {{ title }}</h2>
-<p>Всего голосов: {{ yes + no }}</p>
-<p>За: {{ yes }}</p>
-<p>Против: {{ no }}</p>
+<h2>Результаты голосования</h2>
+{% if message %}
+    <p>{{ message }}</p>
+{% else %}
+    <p>Всего голосов: {{ total_votes }}</p>
+    <p>Голоса "За": {{ result }}</p>
+{% endif %}
 {% endblock %}
