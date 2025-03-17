@@ -4,13 +4,18 @@
 <h1>Доступные голосования</h1>
 <ul>
     {% for poll in polls %}
-        {% if poll[2] >= now %}
-            <!-- Активное голосование (можно голосовать) -->
-            <li><a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a></li>
-        {% else %}
-            <!-- Завершённое голосование (показывает результат) -->
-            <li><a href="/admin/poll/{{ poll[0] }}/results"><strong>{{ poll[1] }} - Голосование завершено</strong></a></li>
-        {% endif %}
+        <li>
+            {% if poll[2] >= now %}
+                <a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a>
+            {% else %}
+                <a href="/admin/poll/{{ poll[0] }}/results"><strong>{{ poll[1] }} - Завершено</strong></a>
+            {% endif %}
+            {% if session.get('is_admin') %}
+                <form action="/admin/poll/{{ poll[0] }}/delete" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Вы уверены, что хотите удалить это голосование?');">🗑️ Удалить</button>
+                </form>
+            {% endif %}
+        </li>
     {% endfor %}
 </ul>
 {% endblock %}

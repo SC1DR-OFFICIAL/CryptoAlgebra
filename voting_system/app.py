@@ -193,6 +193,29 @@ def poll_results(poll_id):
     return render_template('results.html', results=results)
 
 
+@app.route('/admin/poll/<int:poll_id>/delete', methods=['POST'])
+def delete_poll(poll_id):
+    if not session.get('is_admin'):
+        return "Доступ запрещен", 403
+
+    conn = sqlite3.connect('election.db')
+    cursor = conn.cursor()
+
+    # Удаляем голоса, связанные с этим голосованием
+    cursor.execute("DELETE FROM vote WHERE poll_id=?", (poll_id,))
+
+    # Удаляем варианты ответа
+    cursor.execute("DELETE FROM poll_options WHERE poll_id=?", (poll_id,))
+
+    # Удаляем само голосование
+    cursor.execute("DELETE FROM poll WHERE id=?", (poll_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/')
+
+
 # Выход
 @app.route('/logout')
 def logout():
