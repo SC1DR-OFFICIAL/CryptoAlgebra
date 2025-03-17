@@ -144,11 +144,8 @@ def vote(poll_id):
 
 
 # Вывод результатов голосования (для администратора)
-@app.route('/admin/poll/<int:poll_id>/results')
+@app.route('/poll/<int:poll_id>/results')
 def poll_results(poll_id):
-    if not session.get('is_admin'):
-        return "Доступ запрещен", 403
-
     conn = sqlite3.connect('election.db')
     cursor = conn.cursor()
 
@@ -176,7 +173,7 @@ def poll_results(poll_id):
         votes = cursor.fetchall()
 
         if not votes:
-            results[option_text] = 0  # Если голосов нет, ставим 0
+            results[option_text] = 0
             continue
 
         # Восстанавливаем зашифрованные голоса
@@ -190,6 +187,7 @@ def poll_results(poll_id):
 
     conn.close()
     return render_template('results.html', results=results)
+
 
 
 @app.route('/admin/poll/<int:poll_id>/delete', methods=['POST'])
