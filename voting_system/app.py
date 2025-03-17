@@ -14,10 +14,12 @@ app.secret_key = 'secret_key_for_session'
 def index():
     conn = sqlite3.connect('election.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, title FROM poll WHERE end_date >= ?", (datetime.datetime.now().isoformat(),))
+    cursor.execute("SELECT id, title, end_date FROM poll")  # Запросим end_date тоже
     polls = cursor.fetchall()
     conn.close()
-    return render_template('index.html', polls=polls)
+
+    now = datetime.datetime.now().isoformat()  # Текущая дата в формате строки
+    return render_template('index.html', polls=polls, now=now)
 
 
 # Регистрация
@@ -74,7 +76,7 @@ def create_poll():
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO poll (title, end_date, public_key_n, public_key_g, private_key) VALUES (?, ?, ?, ?, ?)",
-            (title, end_date, str(public_key.n), str(public_key.g), serialize_private_key(private_key)))  # Исправлено!
+            (title, end_date, str(public_key.n), str(public_key.g), serialize_private_key(private_key)))
         conn.commit()
         conn.close()
 
@@ -83,14 +85,17 @@ def create_poll():
     return render_template('create_poll.html')
 
 
-# Голосование
+# Голосование (с проверкой, голосовал ли пользователь ранее)
 @app.route('/poll/<int:poll_id>', methods=['GET', 'POST'])
 def vote(poll_id):
     if not session.get('user_id'):
         return redirect('/login')
 
+    user_id = session['user_id']
     conn = sqlite3.connect('election.db')
     cursor = conn.cursor()
+
+    # Получаем информацию о голосовании
     cursor.execute("SELECT title, public_key_n FROM poll WHERE id=?", (poll_id,))
     poll = cursor.fetchone()
 
@@ -98,18 +103,30 @@ def vote(poll_id):
         conn.close()
         return "Голосование не найдено", 404
 
+    title, public_key_n = poll
+
+    # Проверяем, голосовал ли пользователь ранее
+    cursor.execute("SELECT 1 FROM vote WHERE poll_id=? AND user_id=?", (poll_id, user_id))
+    already_voted = cursor.fetchone()
+
+    if already_voted:
+        conn.close()
+        return "Вы уже проголосовали. Ожидайте результата голосования."
+
     if request.method == 'POST':
         choice = int(request.form['choice'])
-        public_key = paillier.PaillierPublicKey(n=int(poll[1]))  # Преобразуем обратно в int
-        encrypted_vote = public_key.encrypt(choice).ciphertext
+        public_key = paillier.PaillierPublicKey(n=int(public_key_n))
+        encrypted_vote = public_key.encrypt(choice)
 
+        # ✅ Правильное сохранение: вызываем `.ciphertext` как метод
         cursor.execute("INSERT INTO vote (poll_id, user_id, encrypted_vote) VALUES (?, ?, ?)",
-                       (poll_id, session['user_id'], str(encrypted_vote)))  # Сохраняем как строку
+                       (poll_id, user_id, str(encrypted_vote.ciphertext())))  # 🛠 Исправлено!
         conn.commit()
         conn.close()
         return "Голос принят"
 
-    return render_template('vote.html', title=poll[0], poll_id=poll_id)
+    conn.close()
+    return render_template('vote.html', title=title, poll_id=poll_id)
 
 
 # Вывод результатов голосования (для администратора)
@@ -120,15 +137,23 @@ def poll_results(poll_id):
 
     conn = sqlite3.connect('election.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT public_key_n, private_key FROM poll WHERE id=?", (poll_id,))
+    cursor.execute("SELECT public_key_n, private_key, end_date FROM poll WHERE id=?", (poll_id,))
     poll = cursor.fetchone()
 
     if not poll:
         conn.close()
         return "Голосование не найдено", 404
 
-    public_key = paillier.PaillierPublicKey(n=int(poll[0]))  # Преобразуем обратно в int
-    private_key = deserialize_private_key(poll[1], public_key)
+    public_key_n, private_key, end_date = poll
+
+    # Проверяем, завершилось ли голосование
+    current_time = datetime.datetime.now()
+    if current_time < datetime.datetime.fromisoformat(end_date):
+        conn.close()
+        return "Голосование ещё не завершено."
+
+    public_key = paillier.PaillierPublicKey(n=int(public_key_n))
+    private_key = deserialize_private_key(private_key, public_key)
 
     cursor.execute("SELECT encrypted_vote FROM vote WHERE poll_id=?", (poll_id,))
     votes = cursor.fetchall()
@@ -137,10 +162,16 @@ def poll_results(poll_id):
     if not votes:
         return "Голосов пока нет"
 
-    encrypted_sum = sum([paillier.EncryptedNumber(public_key, int(vote[0])) for vote in votes])
+    # ✅ Преобразуем строки в `EncryptedNumber`
+    encrypted_votes = [paillier.EncryptedNumber(public_key, int(vote[0])) for vote in votes]
+
+    # ✅ Используем гомоморфное сложение
+    encrypted_sum = sum(encrypted_votes)
+
+    # ✅ Расшифровываем сумму голосов
     result = private_key.decrypt(encrypted_sum)
 
-    return f"Результат: {result} голосов 'За'"
+    return f"Результат голосования: {result} голосов 'За'"
 
 
 # Выход
