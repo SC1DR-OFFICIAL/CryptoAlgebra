@@ -50,7 +50,7 @@ conn.close()
 print("База данных обновлена.")
 
 # Проверяем, есть ли пользователь 'Aleksandr'
-cursor.execute("SELECT id FROM user WHERE username = ?", ('Aleksandr',))
+cursor.execute("SELECT id FROM user WHERE username = ?", ('admin',))
 user = cursor.fetchone()
 
 if not user:

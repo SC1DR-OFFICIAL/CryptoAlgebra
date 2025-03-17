@@ -4,8 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="Удаление голосований">
+    <list default="true" id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="Перенаправление на главную страницу после завершения голосования">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/election.db" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/election.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/create_poll.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/create_poll.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/results.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/results.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/templates/vote.html" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/templates/vote.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -141,7 +150,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742205324636</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Перенаправление на главную страницу после завершения голосования">
+      <option name="closed" value="true" />
+      <created>1742206922601</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1742206922601</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -160,6 +177,7 @@
     <MESSAGE value="Результаты голосования" />
     <MESSAGE value="Результаты голосования с произвольными вариантами" />
     <MESSAGE value="Удаление голосований" />
-    <option name="LAST_COMMIT_MESSAGE" value="Удаление голосований" />
+    <MESSAGE value="Перенаправление на главную страницу после завершения голосования" />
+    <option name="LAST_COMMIT_MESSAGE" value="Перенаправление на главную страницу после завершения голосования" />
   </component>
 </project>

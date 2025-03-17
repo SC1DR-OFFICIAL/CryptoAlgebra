@@ -143,7 +143,6 @@ def vote(poll_id):
     return render_template('vote.html', title=title, poll_id=poll_id, options=options)
 
 
-
 # Вывод результатов голосования (для администратора)
 @app.route('/admin/poll/<int:poll_id>/results')
 def poll_results(poll_id):

@@ -1,16 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Результаты голосования{% endblock %}
 {% block content %}
-<h2>Результаты голосования</h2>
+<h2 class="mb-4">Результаты голосования</h2>
 
 {% if results %}
-    <ul>
-        {% for option, count in results.items() %}
-            <li><strong>{{ option }}:</strong> {{ count }} голосов</li>
-        {% endfor %}
-    </ul>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Вариант</th>
+                <th>Голосов</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for option, count in results.items() %}
+                <tr>
+                    <td>{{ option }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% else %}
-    <p>Голосов пока нет</p>
+    <p class="text-muted">Голосов пока нет</p>
 {% endif %}
 
 {% endblock %}

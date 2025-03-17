@@ -1,21 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Создать голосование{% endblock %}
 {% block content %}
-<h2>Создание голосования</h2>
-<form method="post">
-    <label>Название голосования:</label>
-    <input type="text" name="title" required><br><br>
+<h2 class="mb-4">Создание голосования</h2>
 
-    <label>Дата окончания голосования:</label>
-    <input type="datetime-local" name="end_date" required><br><br>
-
-    <label>Варианты ответов:</label>
-    <div id="options">
-        <input type="text" name="options" required>
+<form method="post" class="card p-4">
+    <div class="mb-3">
+        <label class="form-label">Название голосования:</label>
+        <input type="text" name="title" class="form-control" required>
     </div>
-    <button type="button" onclick="addOption()">Добавить вариант</button><br><br>
 
-    <button type="submit">Создать</button>
+    <div class="mb-3">
+        <label class="form-label">Дата окончания голосования:</label>
+        <input type="datetime-local" name="end_date" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Варианты ответов:</label>
+        <div id="options">
+            <input type="text" name="options" class="form-control mb-2" required>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="addOption()">Добавить вариант</button>
+    </div>
+
+    <button type="submit" class="btn btn-success">Создать</button>
 </form>
 
 <script>
@@ -24,8 +31,8 @@ function addOption() {
     let input = document.createElement("input");
     input.type = "text";
     input.name = "options";
+    input.className = "form-control mb-2";
     input.required = true;
-    div.appendChild(document.createElement("br"));
     div.appendChild(input);
 }
 </script>

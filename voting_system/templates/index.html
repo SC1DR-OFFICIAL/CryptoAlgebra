@@ -1,21 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Главная{% endblock %}
 {% block content %}
-<h1>Доступные голосования</h1>
-<ul>
+<h1 class="mb-4">Доступные голосования</h1>
+
+<div class="row">
     {% for poll in polls %}
-        <li>
-            {% if poll[2] >= now %}
-                <a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a>
-            {% else %}
-                <a href="/admin/poll/{{ poll[0] }}/results"><strong>{{ poll[1] }} - Завершено</strong></a>
-            {% endif %}
-            {% if session.get('is_admin') %}
-                <form action="/admin/poll/{{ poll[0] }}/delete" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('Вы уверены, что хотите удалить это голосование?');">🗑️ Удалить</button>
-                </form>
-            {% endif %}
-        </li>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {% if poll[2] >= now %}
+                        <h5 class="card-title"><a href="/poll/{{ poll[0] }}" class="text-decoration-none">{{ poll[1] }}</a></h5>
+                        <p class="text-muted">Активное голосование</p>
+                    {% else %}
+                        <h5 class="card-title"><a href="/admin/poll/{{ poll[0] }}/results" class="text-decoration-none">{{ poll[1] }} - Завершено</a></h5>
+                        <p class="text-muted">Голосование завершено</p>
+                    {% endif %}
+                    {% if session.get('is_admin') %}
+                        <form action="/admin/poll/{{ poll[0] }}/delete" method="post">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены, что хотите удалить это голосование?');">🗑️ Удалить</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     {% endfor %}
-</ul>
+</div>
+
 {% endblock %}
