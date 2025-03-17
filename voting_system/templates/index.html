@@ -9,8 +9,12 @@
             <div class="card mb-3">
                 <div class="card-body">
                     {% if poll[2] >= now %}
-                        <h5 class="card-title"><a href="/poll/{{ poll[0] }}" class="text-decoration-none">{{ poll[1] }}</a></h5>
-                        <p class="text-muted">Активное голосование</p>
+                        <h5 class="card-title">
+                            <a href="/poll/{{ poll[0] }}" class="text-decoration-none">{{ poll[1] }}</a>
+                        </h5>
+                        <p class="text-muted">
+                            Оставшееся время: <span id="timer-{{ poll[0] }}"></span>
+                        </p>
                     {% else %}
                         <h5 class="card-title">
                             <a href="/poll/{{ poll[0] }}/results" class="text-decoration-none">{{ poll[1] }} - Завершено</a>
@@ -25,6 +29,24 @@
                 </div>
             </div>
         </div>
+        <script>
+            let endTime{{ poll[0] }} = new Date("{{ poll[2] }}").getTime();
+            let timer{{ poll[0] }} = setInterval(function() {
+                let now = new Date().getTime();
+                let timeLeft = endTime{{ poll[0] }} - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer{{ poll[0] }});
+                    document.getElementById("timer-{{ poll[0] }}").innerHTML = "Завершено";
+                } else {
+                    let hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+                    let minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
+                    let seconds = Math.floor((timeLeft / 1000) % 60);
+                    document.getElementById("timer-{{ poll[0] }}").innerHTML =
+                        (hours > 0 ? hours + "ч " : "") + minutes + "м " + seconds + "с";
+                }
+            }, 1000);
+        </script>
     {% endfor %}
 </div>
 
