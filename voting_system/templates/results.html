@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Результаты голосования{% endblock %}
+{% block content %}
+<h2>Результаты: {{ title }}</h2>
+<p>Всего голосов: {{ yes + no }}</p>
+<p>За: {{ yes }}</p>
+<p>Против: {{ no }}</p>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+<h1>Доступные голосования</h1>
+<ul>
+    {% for poll in polls %}
+        <li><a href="/poll/{{ poll[0] }}">{{ poll[1] }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

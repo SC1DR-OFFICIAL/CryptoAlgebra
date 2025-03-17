@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Голосование{% endblock %}</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Главная</a>
+        {% if session.username %}
+            <span>Вы вошли как {{ session.username }}</span> |
+            <a href="/logout">Выйти</a>
+            {% if session.is_admin %}
+                | <a href="/admin/create_poll">Создать голосование</a>
+            {% endif %}
+        {% else %}
+            <a href="/login">Войти</a> |
+            <a href="/register">Регистрация</a>
+        {% endif %}
+    </nav>
+    <hr>
+    <div>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
