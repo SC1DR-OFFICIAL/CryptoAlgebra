@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="Время до конца голосования" />
+    <list default="true" id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="Время до конца голосования">
+      <change afterPath="$PROJECT_DIR$/voting_system/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/CryptoAlgebra.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/CryptoAlgebra.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting_system/election.db" beforeDir="false" afterPath="$PROJECT_DIR$/voting_system/election.db" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -20,21 +27,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "SC1DR-OFFICIAL"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SC1DR-OFFICIAL&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/SC1DR-OFFICIAL/CryptoAlgebra.git",
-    "accountId": "4fd2e62c-fc30-40e5-873f-fd6c78431374"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SC1DR-OFFICIAL/CryptoAlgebra.git&quot;,
+    &quot;accountId&quot;: &quot;a69b18c6-9f3d-4426-b64e-37387400b0df&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="2uR8nQ3tNeGMzfmcDX4m8qou8r5" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -46,9 +53,12 @@
     "Python.app.executor": "Run",
     "Python.db.executor": "Run",
     "Python.db_init.executor": "Run",
+    "Python.main.executor": "Run",
     "Python.set_admin.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/aleksandrkarimov/Downloads/CryptoAlgebra/CryptoAlgebra",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
   <component name="RunManager">
