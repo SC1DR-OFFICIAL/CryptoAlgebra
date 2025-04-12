@@ -9,9 +9,9 @@
 <body class="bg-light">
 
     <!-- Навигация -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1D77D0;">
         <div class="container">
-            <a class="navbar-brand" href="/">Голосование</a>
+            <a class="navbar-brand" href="/">Тайное голосование</a>
             <div>
                 {% if session.username %}
                     <span class="text-light me-3">Вы вошли как <strong>{{ session.username }}</strong></span>
@@ -26,6 +26,16 @@
             </div>
         </div>
     </nav>
+
+    <!-- Вторая шапка -->
+    <div style="background-color: #F0F8FD;">
+        <div class="container py-2 d-flex align-items-center justify-content-between">
+            <a href="https://www.asu.ru/" target="_blank">
+                <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Логотип" style="height: 85px; margin-top: 5px;">
+            </a>
+            <a href="{{ url_for('homomorphic_info') }}" class="btn btn-link text-decoration-none">Узнать о гомоморфном шифровании</a>
+        </div>
+    </div>
 
     <!-- Контент -->
     <div class="container mt-4">

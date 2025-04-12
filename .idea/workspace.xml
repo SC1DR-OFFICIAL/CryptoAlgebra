@@ -4,79 +4,58 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="requirements.txt" />
+    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/static/img/LOGO.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/CryptoAlgebra.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/CryptoAlgebra.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;SC1DR-OFFICIAL&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "SC1DR-OFFICIAL"
   }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/SC1DR-OFFICIAL/CryptoAlgebra.git&quot;,
-    &quot;accountId&quot;: &quot;a69b18c6-9f3d-4426-b64e-37387400b0df&quot;
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/SC1DR-OFFICIAL/CryptoAlgebra.git",
+    "accountId": "4fd2e62c-fc30-40e5-873f-fd6c78431374"
   }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 2
-}</component>
-  <component name="ProjectId" id="2uR8nQ3tNeGMzfmcDX4m8qou8r5" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="2vcclM5IZoGuws6yVbb2muWZUnB" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.app.executor&quot;: &quot;Run&quot;,
-    &quot;Python.db.executor&quot;: &quot;Run&quot;,
-    &quot;Python.db_init.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.set_admin.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/aleksandrkarimov/Downloads/CryptoAlgebra/CryptoAlgebra&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.app.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main"
   }
-}</component>
-  <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="CryptoAlgebra" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\baki2\CryptoAlgebra\static\img" />
+      <recent name="C:\Users\baki2\CryptoAlgebra\static" />
+      <recent name="C:\Users\baki2\CryptoAlgebra\templates" />
+      <recent name="C:\Users\baki2\CryptoAlgebra\img" />
+    </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -88,124 +67,12 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="c72e44e3-8c5f-4a49-afbe-61f673f95dae" name="Changes" comment="" />
-      <created>1742200193387</created>
+      <changelist id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="" />
+      <created>1744447954338</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1742200193387</updated>
+      <updated>1744447954338</updated>
     </task>
-    <task id="LOCAL-00001" summary="First commit">
-      <option name="closed" value="true" />
-      <created>1742202308882</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1742202308882</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Результаты голосования">
-      <option name="closed" value="true" />
-      <created>1742203442543</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1742203442543</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Результаты голосования">
-      <option name="closed" value="true" />
-      <created>1742203509447</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1742203509447</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Результаты голосования">
-      <option name="closed" value="true" />
-      <created>1742203608494</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1742203608494</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Результаты голосования с произвольными вариантами">
-      <option name="closed" value="true" />
-      <created>1742204359806</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1742204359806</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Удаление голосований">
-      <option name="closed" value="true" />
-      <created>1742205324636</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1742205324636</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Перенаправление на главную страницу после завершения голосования">
-      <option name="closed" value="true" />
-      <created>1742206922601</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1742206922601</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Красивый дизайн сайта">
-      <option name="closed" value="true" />
-      <created>1742208045014</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1742208045014</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Просмотр результатов голосования">
-      <option name="closed" value="true" />
-      <created>1742208423586</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1742208423586</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Время до конца голосования">
-      <option name="closed" value="true" />
-      <created>1742208982937</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1742208982937</updated>
-    </task>
-    <task id="LOCAL-00011" summary="requirements.txt">
-      <option name="closed" value="true" />
-      <created>1742627350093</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1742627350093</updated>
-    </task>
-    <option name="localTasksCounter" value="12" />
     <servers />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="First commit" />
-    <MESSAGE value="Результаты голосования" />
-    <MESSAGE value="Результаты голосования с произвольными вариантами" />
-    <MESSAGE value="Удаление голосований" />
-    <MESSAGE value="Перенаправление на главную страницу после завершения голосования" />
-    <MESSAGE value="Красивый дизайн сайта" />
-    <MESSAGE value="Просмотр результатов голосования" />
-    <MESSAGE value="Время до конца голосования" />
-    <MESSAGE value="requirements.txt" />
-    <option name="LAST_COMMIT_MESSAGE" value="requirements.txt" />
   </component>
 </project>

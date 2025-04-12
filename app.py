@@ -61,6 +61,11 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/homomorphic-info')
+def homomorphic_info():
+    return render_template('homomorphic_info.html')
+
+
 # Создание голосования (только для администратора)
 @app.route('/admin/create_poll', methods=['GET', 'POST'])
 def create_poll():
