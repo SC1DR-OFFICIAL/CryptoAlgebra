@@ -3,7 +3,7 @@ import datetime
 import json
 
 import asyncpg
-from fastapi import FastAPI, Request, Form, Depends, status
+from fastapi import FastAPI, Request, Form, Depends, status, Response
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -194,15 +194,15 @@ async def create_poll_post(
 # --- Голосование ---
 @app.get("/poll/{poll_id}", response_class=HTMLResponse)
 async def vote_get(
-        request: Request,
-        poll_id: int,
-        conn=Depends(get_conn)
+    request: Request,
+    poll_id: int,
+    conn=Depends(get_conn)
 ):
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-    # 1) Получаем параметры голосования
+    # Получаем данные опроса
     poll = await conn.fetchrow(
         "SELECT title, public_key_n, private_key, end_date FROM poll WHERE id = $1",
         poll_id
@@ -210,44 +210,53 @@ async def vote_get(
     if not poll:
         return HTMLResponse("Голосование не найдено", status_code=404)
 
-    title = poll["title"]
-    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    title       = poll["title"]
+    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     private_key = deserialize_private_key(poll["private_key"], public_key)
-    end_date = poll["end_date"]
+    end_date    = poll["end_date"]
 
-    # 2) Получаем варианты
+    # Варианты ответов
     options = await conn.fetch(
         "SELECT id, option_text FROM poll_options WHERE poll_id = $1 ORDER BY id",
         poll_id
     )
-
-    # 3) Проверяем, завершено ли голосование
-    now = datetime.datetime.now().isoformat()
+    # Статус голосования
+    now       = datetime.datetime.now().isoformat()
     is_closed = now >= end_date
 
-    # 4) Определяем прошлый выбор, если он есть, через дешифровку вектора
+    # Старая запись — для pre‑selection
     prev = await conn.fetchrow(
         "SELECT ciphertexts FROM vote WHERE poll_id = $1 AND user_id = $2",
         poll_id, user_id
     )
     previous_vote = None
     if prev:
-        ct_list = json.loads(prev["ciphertexts"])
-        for ((opt_id, _), cstr) in zip(options, ct_list):
-            val = private_key.decrypt(
-                paillier.EncryptedNumber(public_key, int(cstr))
-            )
-            if val == 1:
+        # дешифруем вектор, находим единственный 1
+        arr = json.loads(prev["ciphertexts"])
+        for (opt_id, _), cstr in zip(options, arr):
+            if private_key.decrypt(paillier.EncryptedNumber(public_key, int(cstr))) == 1:
                 previous_vote = opt_id
                 break
 
+    # Параметр из POST‑редиректа ?voted=ID
+    voted_id   = request.query_params.get("voted")
+    voted_text = None
+    if voted_id:
+        for opt_id, opt_text in options:
+            if str(opt_id) == voted_id:
+                voted_text = opt_text
+                break
+
+    # Отдаём **все** переменные, на которые ссылаются в templates/vote.html
     return templates.TemplateResponse("vote.html", {
         "request": request,
         "title": title,
         "poll_id": poll_id,
         "options": options,
         "previous_vote": previous_vote,
-        "is_closed": is_closed
+        "is_closed": is_closed,
+        "can_change": not is_closed,
+        "voted_text": voted_text
     })
 
 
@@ -313,7 +322,10 @@ async def vote_post(
             poll_id, user_id, data, signature
         )
 
-    return RedirectResponse(url=f"/poll/{poll_id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        url=f"/poll/{poll_id}?voted={selected_option}",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
 
 
 # --- Результаты ---
