@@ -31,7 +31,10 @@
     <div style="background-color: #F0F8FD;">
         <div class="container py-2 d-flex align-items-center justify-content-between">
             <a href="https://www.asu.ru/" target="_blank">
-                <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Логотип" style="height: 85px; margin-top: 5px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='img/LOGO_MOBILE.png') }}" media="(max-width: 768px)">
+                  <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Логотип">
+                </picture>
             </a>
             <a href="{{ url_for('homomorphic_info') }}" class="btn btn-link text-decoration-none">Узнать о гомоморфном шифровании</a>
         </div>
