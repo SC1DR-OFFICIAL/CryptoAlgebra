@@ -6,12 +6,28 @@
 <form method="post" class="card p-4">
     {% for option in options %}
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="option" value="{{ option[0] }}"
-                   {% if previous_vote and previous_vote[0] == option[0] %}checked{% endif %} required>
+            <input class="form-check-input"
+                   type="radio"
+                   name="option"
+                   value="{{ option[0] }}"
+                   {% if previous_vote and previous_vote[0] == option[0] %}checked{% endif %}
+                   required>
             <label class="form-check-label">{{ option[1] }}</label>
         </div>
     {% endfor %}
-    <br>
+
+    <div class="mb-3 mt-4">
+        <label for="priv_key" class="form-label">
+          Вставьте ваш приватный RSA‑ключ для подписи:
+        </label>
+        <textarea id="priv_key"
+                  name="priv_key"
+                  class="form-control"
+                  rows="6"
+                  placeholder="-----BEGIN RSA PRIVATE KEY----- …"
+                  required></textarea>
+    </div>
+
     <button type="submit" class="btn btn-primary">Голосовать</button>
 </form>
 <p class="text-muted mt-3">Вы можете изменить свой голос до окончания голосования.</p>

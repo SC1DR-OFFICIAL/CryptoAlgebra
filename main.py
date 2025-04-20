@@ -12,10 +12,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from encryption import generate_homomorphic_keypair, serialize_private_key, deserialize_private_key
 
-from Crypto.PublicKey    import RSA
-from Crypto.Signature    import pkcs1_15
-from Crypto.Hash         import SHA256
-
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
 
 # --- Настройки FastAPI ---
 app = FastAPI()
@@ -79,18 +78,39 @@ async def register_post(
     # 1) Хешируем пароль
     password_hash = generate_password_hash(password)
 
-    # 2) Генерируем RSA‑ключи
+    # 2) Генерируем пару RSA‑ключей
     rsa_key = RSA.generate(2048)
     private_pem = rsa_key.export_key().decode()
     public_pem = rsa_key.publickey().export_key().decode()
 
-    # 3) Сохраняем в сессии приватный ключ, в БД — публичный
-    request.session["rsa_private_key"] = private_pem
-    await conn.execute(
-        'INSERT INTO "user" (username, password_hash, rsa_public_key) VALUES ($1, $2, $3)',
+    # 3) Сохраняем пользователя с публичным ключом
+    rec = await conn.fetchrow(
+        'INSERT INTO "user" (username, password_hash, rsa_public_key) '
+        'VALUES ($1, $2, $3) RETURNING id',
         username, password_hash, public_pem
     )
-    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 4) Автоматически логиним и сохраняем приватный ключ в сессии
+    request.session["user_id"] = rec["id"]
+    request.session["username"] = username
+    request.session["is_admin"] = False
+    request.session["rsa_private_key"] = private_pem
+
+    # 5) Перенаправляем на страницу показа ключа
+    return RedirectResponse(url="/mykey", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/mykey", response_class=HTMLResponse)
+async def show_my_key(request: Request):
+    # Доступ только для залогиненных пользователей
+    if not request.session.get("user_id"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    priv = request.session.get("rsa_private_key")
+    return templates.TemplateResponse("show_key.html", {
+        "request": request,
+        "private_key": priv
+    })
 
 
 # --- Вход ---
@@ -209,13 +229,15 @@ async def vote_get(request: Request, poll_id: int, conn=Depends(get_conn)):
 async def vote_post(
         request: Request,
         poll_id: int,
-        option: int = Form(..., alias="option"),
+        option: int = Form(...),
+        priv_key_pem: str = Form(..., alias="priv_key"),
         conn=Depends(get_conn)
 ):
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
+    # Проверяем, что голосование ещё открыто
     poll = await conn.fetchrow(
         "SELECT public_key_n, end_date FROM poll WHERE id = $1",
         poll_id
@@ -224,20 +246,25 @@ async def vote_post(
     if now >= poll["end_date"]:
         return HTMLResponse("Голосование завершено.", status_code=400)
 
+    # Шифруем голос
     public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     encrypted = public_key.encrypt(1).ciphertext()
 
-    # --- Формируем сообщение и подписываем его приватным ключом из сессии ---
+    # --- Формируем сообщение и подписываем его приватным ключом из формы ---
     msg = f"poll:{poll_id};user:{user_id};option:{option}"
     h = SHA256.new(msg.encode())
-    priv = RSA.import_key(request.session["rsa_private_key"])
-    signature = pkcs1_15.new(priv).sign(h).hex()
 
+    try:
+        priv = RSA.import_key(priv_key_pem)
+        signature = pkcs1_15.new(priv).sign(h).hex()
+    except (ValueError, IndexError):
+        return HTMLResponse("Неверный формат приватного ключа.", status_code=400)
+
+    # --- Сохраняем / обновляем голос вместе с подписью ---
     prev = await conn.fetchrow(
         "SELECT id FROM vote WHERE poll_id=$1 AND user_id=$2",
         poll_id, user_id
     )
-
     if prev:
         await conn.execute(
             "UPDATE vote SET option_id=$1, encrypted_vote=$2, signature=$3 WHERE id=$4",
@@ -245,7 +272,8 @@ async def vote_post(
         )
     else:
         await conn.execute(
-            "INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote, signature) VALUES ($1,$2,$3,$4,$5)",
+            "INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote, signature)"
+            " VALUES ($1,$2,$3,$4,$5)",
             poll_id, user_id, option, str(encrypted), signature
         )
 
