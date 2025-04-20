@@ -19,7 +19,7 @@
                     </span>
                     <a class="btn btn-outline-light me-2" href="/logout">Выйти</a>
                     {% if request.session.get('is_admin') %}
-                        <a class="btn btn-warning" href="/admin/create_poll">Создать голосование</a>
+                        <a class="btn btn-outline-light me-2" href="/admin/create_poll">Создать голосование</a>
                     {% endif %}
                 {% else %}
                     <a class="btn btn-outline-light me-2" href="/login">Войти</a>
