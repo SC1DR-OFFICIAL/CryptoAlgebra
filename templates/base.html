@@ -13,10 +13,12 @@
         <div class="container">
             <a class="navbar-brand" href="/">Тайное голосование</a>
             <div>
-                {% if session.username %}
-                    <span class="text-light me-3">Вы вошли как <strong>{{ session.username }}</strong></span>
+                {% if request.session.get('username') %}
+                    <span class="text-light me-3">
+                        Вы вошли как <strong>{{ request.session['username'] }}</strong>
+                    </span>
                     <a class="btn btn-outline-light me-2" href="/logout">Выйти</a>
-                    {% if session.is_admin %}
+                    {% if request.session.get('is_admin') %}
                         <a class="btn btn-warning" href="/admin/create_poll">Создать голосование</a>
                     {% endif %}
                 {% else %}
@@ -32,11 +34,13 @@
         <div class="container py-2 d-flex align-items-center justify-content-between">
             <a href="https://www.asu.ru/" target="_blank">
                 <picture>
-                  <source srcset="{{ url_for('static', filename='img/LOGO_MOBILE.png') }}" media="(max-width: 768px)">
-                  <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Логотип">
+                  <source srcset="{{ request.url_for('static', path='img/LOGO_MOBILE.png') }}" media="(max-width: 768px)">
+                  <img src="{{ request.url_for('static', path='img/LOGO.png') }}" alt="Логотип">
                 </picture>
             </a>
-            <a href="{{ url_for('homomorphic_info') }}" class="btn btn-link text-decoration-none">Узнать о гомоморфном шифровании</a>
+            <a href="/homomorphic-info" class="btn btn-link text-decoration-none">
+                Узнать о гомоморфном шифровании
+            </a>
         </div>
     </div>
 

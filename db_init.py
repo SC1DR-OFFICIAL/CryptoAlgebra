@@ -1,71 +1,97 @@
-import sqlite3
+import asyncio
+import asyncpg
+import logging
+from werkzeug.security import generate_password_hash
 
-conn = sqlite3.connect('election.db')
-cursor = conn.cursor()
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
-# Таблица пользователей
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS user (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    is_admin INTEGER NOT NULL DEFAULT 0
-)''')
+# Конфигурация подключения к базе данных (Beget)
+DB_CONFIG = {
+    "host": "quumdrafueyun.beget.app",
+    "port": 5432,
+    "user": "cloud_user",
+    "password": "eLT1ApRZ%Fkf",
+    "database": "default_db"
+}
 
-# Таблица голосований
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS poll (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    end_date TEXT NOT NULL,
-    public_key_n TEXT,
-    public_key_g TEXT,
-    private_key TEXT
-)''')
 
-# Таблица вариантов ответов
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS poll_options (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    poll_id INTEGER NOT NULL,
-    option_text TEXT NOT NULL,
-    FOREIGN KEY(poll_id) REFERENCES poll(id)
-)''')
+async def init_db():
+    try:
+        conn = await asyncpg.connect(**DB_CONFIG)
+        await conn.execute("SET search_path TO public;")
+        logger.info("✅ Подключение к PostgreSQL установлено.")
 
-# Таблица голосов
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS vote (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    poll_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    option_id INTEGER NOT NULL,
-    encrypted_vote TEXT NOT NULL,
-    FOREIGN KEY(poll_id) REFERENCES poll(id),
-    FOREIGN KEY(user_id) REFERENCES user(id),
-    FOREIGN KEY(option_id) REFERENCES poll_options(id)
-)''')
+        # Создание таблицы user
+        await conn.execute('''
+        CREATE TABLE IF NOT EXISTS "user" (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+            rsa_public_key TEXT
+        )
+        ''')
 
-conn.commit()
-conn.close()
-print("База данных обновлена.")
+        # Таблица голосований
+        await conn.execute('''
+        CREATE TABLE IF NOT EXISTS poll (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            public_key_n TEXT,
+            public_key_g TEXT,
+            private_key TEXT
+        )
+        ''')
 
-# Проверяем, есть ли пользователь 'Aleksandr'
-cursor.execute("SELECT id FROM user WHERE username = ?", ('admin',))
-user = cursor.fetchone()
+        # Таблица вариантов ответов
+        await conn.execute('''
+        CREATE TABLE IF NOT EXISTS poll_options (
+            id SERIAL PRIMARY KEY,
+            poll_id INTEGER NOT NULL REFERENCES poll(id) ON DELETE CASCADE,
+            option_text TEXT NOT NULL
+        )
+        ''')
 
-if not user:
-    # Создаём пользователя (пароль по умолчанию 'password', но надо захешировать!)
-    from werkzeug.security import generate_password_hash
-    password_hash = generate_password_hash("password")
+        # Таблица голосов
+        await conn.execute('''
+        CREATE TABLE IF NOT EXISTS vote (
+            id SERIAL PRIMARY KEY,
+            poll_id INTEGER NOT NULL REFERENCES poll(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+            option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+            encrypted_vote TEXT NOT NULL,
+            signature TEXT
+        )
+        ''')
 
-    cursor.execute("INSERT INTO user (username, password_hash, is_admin) VALUES (?, ?, ?)",
-                   ('Aleksandr', password_hash, 1))
-    conn.commit()
-    print("Пользователь 'Aleksandr' создан и назначен администратором.")
-else:
-    # Если пользователь уже есть, просто обновляем его права администратора
-    cursor.execute("UPDATE user SET is_admin = 1 WHERE username = ?", ('Aleksandr',))
-    conn.commit()
-    print("Пользователь 'Aleksandr' теперь администратор.")
+        logger.info("✅ Таблицы успешно созданы или уже существуют.")
 
-conn.close()
+        # Проверка наличия пользователя admin
+        user = await conn.fetchrow('SELECT id FROM "user" WHERE username = $1', 'Aleksandr')
+
+        if not user:
+            password_hash = generate_password_hash("password")
+            await conn.execute(
+                'INSERT INTO "user" (username, password_hash, is_admin) VALUES ($1, $2, $3)',
+                'Aleksandr', password_hash, True
+            )
+            logger.info("🆕 Пользователь 'Aleksandr' создан и назначен администратором.")
+        else:
+            await conn.execute(
+                'UPDATE "user" SET is_admin = $1 WHERE username = $2',
+                True, 'Aleksandr'
+            )
+            logger.info("🔁 Пользователь 'Aleksandr' теперь администратор.")
+
+        await conn.close()
+        logger.info("🔒 Подключение к базе данных закрыто.")
+
+    except Exception as e:
+        logger.error(f"❌ Ошибка инициализации базы данных: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(init_db())
