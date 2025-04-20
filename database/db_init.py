@@ -58,8 +58,7 @@ async def init_db():
         id SERIAL PRIMARY KEY,
         poll_id INTEGER NOT NULL REFERENCES poll(id) ON DELETE CASCADE,
         user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-        option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
-        encrypted_vote TEXT NOT NULL,
+        ciphertexts TEXT NOT NULL,
         signature TEXT
     );
     ''')
