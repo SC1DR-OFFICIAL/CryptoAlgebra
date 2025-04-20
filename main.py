@@ -358,7 +358,78 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
 
     return templates.TemplateResponse("results.html", {
         "request": request,
-        "results": results
+        "results": results,
+        "poll_id": poll_id
+    })
+
+
+@app.get("/poll/{poll_id}/verify", response_class=HTMLResponse)
+async def verify_vote_get(request: Request, poll_id: int):
+    # убедимся, что пользователь залогинен
+    if not request.session.get("user_id"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse("verify_vote.html", {
+        "request": request,
+        "poll_id": poll_id
+    })
+
+
+@app.post("/poll/{poll_id}/verify", response_class=HTMLResponse)
+async def verify_vote_post(
+    request: Request,
+    poll_id: int,
+    priv_key_pem: str = Form(..., alias="priv_key"),
+    conn=Depends(get_conn)
+):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 1) Достаём запись голосования этого пользователя
+    row = await conn.fetchrow(
+        "SELECT ciphertexts, signature FROM vote WHERE poll_id=$1 AND user_id=$2",
+        poll_id, user_id
+    )
+    if not row:
+        return HTMLResponse("Ваш голос не найден.", status_code=404)
+
+    # 2) Верифицируем подпись
+    ct_list = json.loads(row["ciphertexts"])
+    msg     = f"poll:{poll_id};user:{user_id};choices:{','.join(ct_list)}"
+    h       = SHA256.new(msg.encode())
+    pub_pem = await conn.fetchval('SELECT rsa_public_key FROM "user" WHERE id=$1', user_id)
+    try:
+        pkcs1_15.new(RSA.import_key(pub_pem)).verify(h, bytes.fromhex(row["signature"]))
+    except (ValueError, TypeError):
+        return HTMLResponse("Ошибка: подпись вашего голоса не прошла проверку.", status_code=400)
+
+    # 3) Дешифруем вектор и находим выбранный вариант
+    poll = await conn.fetchrow("SELECT public_key_n, private_key FROM poll WHERE id=$1", poll_id)
+    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    private_key = deserialize_private_key(poll["private_key"], public_key)
+
+    chosen_opt_id = None
+    for idx, cstr in enumerate(ct_list):
+        val = private_key.decrypt(
+            paillier.EncryptedNumber(public_key, int(cstr))
+        )
+        if val == 1:
+            chosen_opt_id = idx
+            break
+
+    if chosen_opt_id is None:
+        return HTMLResponse("Не удалось определить ваш выбор.", status_code=400)
+
+    # 4) Получаем текст варианта
+    option = await conn.fetchrow(
+        "SELECT option_text FROM poll_options WHERE poll_id=$1 ORDER BY id OFFSET $2 LIMIT 1",
+        poll_id, chosen_opt_id
+    )
+
+    return templates.TemplateResponse("verify_vote.html", {
+        "request": request,
+        "poll_id": poll_id,
+        "chosen": option["option_text"]
     })
 
 

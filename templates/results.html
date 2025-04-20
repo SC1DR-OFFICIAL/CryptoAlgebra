@@ -27,4 +27,7 @@
 <a href="{{ request.url_for('index') }}" class="btn btn-primary">
   Вернуться на главную
 </a>
+<a href="{{ request.url_for('verify_vote_get', poll_id=poll_id) }}" class="btn btn-secondary ms-2">
+  Проверить мой голос
+</a>
 {% endblock %}
