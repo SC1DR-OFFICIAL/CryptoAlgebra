@@ -13,5 +13,8 @@
     </div>
     <button type="submit" class="btn btn-success">Зарегистрироваться</button>
 </form>
-<p class="mt-3">Уже есть аккаунт? <a href="/login">Войти</a></p>
+<p class="mt-3">
+    Уже есть аккаунт?
+    <a href="{{ request.url_for('login_get') }}">Войти</a>
+</p>
 {% endblock %}

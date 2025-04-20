@@ -21,33 +21,43 @@
                         </h5>
                         <p class="text-muted">Голосование завершено</p>
                     {% endif %}
-                    {% if session.get('is_admin') %}
-                        <form action="/admin/poll/{{ poll[0] }}/delete" method="post">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены, что хотите удалить это голосование?');">🗑️ Удалить</button>
+
+                    {% if request.session.get('is_admin') %}
+                        <form action="/admin/poll/{{ poll[0] }}/delete" method="post" class="mt-2">
+                            <button
+                              type="submit"
+                              class="btn btn-danger btn-sm"
+                              onclick="return confirm('Вы уверены, что хотите удалить это голосование?');">
+                              🗑️ Удалить
+                            </button>
                         </form>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <script>
-            let endTime{{ poll[0] }} = new Date("{{ poll[2] }}").getTime();
-            let timer{{ poll[0] }} = setInterval(function() {
-                let now = new Date().getTime();
-                let timeLeft = endTime{{ poll[0] }} - now;
 
-                if (timeLeft <= 0) {
-                    clearInterval(timer{{ poll[0] }});
-                    document.getElementById("timer-{{ poll[0] }}").innerHTML = "Завершено";
-                } else {
-                    let hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
-                    let minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
-                    let seconds = Math.floor((timeLeft / 1000) % 60);
-                    document.getElementById("timer-{{ poll[0] }}").innerHTML =
-                        (hours > 0 ? hours + "ч " : "") + minutes + "м " + seconds + "с";
-                }
-            }, 1000);
+        <script>
+            (function() {
+                const endTime = new Date("{{ poll[2] }}").getTime();
+                const timerEl = document.getElementById("timer-{{ poll[0] }}");
+                const intervalId = setInterval(function() {
+                    const now = Date.now();
+                    let diff = endTime - now;
+                    if (diff <= 0) {
+                        clearInterval(intervalId);
+                        timerEl.textContent = "Завершено";
+                    } else {
+                        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+                        const seconds = Math.floor((diff / 1000) % 60);
+                        timerEl.textContent =
+                            (hours > 0 ? hours + "ч " : "") +
+                            minutes + "м " +
+                            seconds + "с";
+                    }
+                }, 1000);
+            })();
         </script>
     {% endfor %}
 </div>
-
 {% endblock %}
