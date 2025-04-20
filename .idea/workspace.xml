@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="Переход на Postgres + Fast API">
+    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="Вы успешно проголосовали за вариант">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/vote.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/vote.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,16 +38,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.app.executor": "Run",
-    "Python.db_init.executor": "Run",
-    "Python.drop_tables.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.db_init.executor&quot;: &quot;Run&quot;,
+    &quot;Python.drop_tables.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\baki2\CryptoAlgebra\database" />
@@ -111,7 +113,63 @@
       <option name="project" value="LOCAL" />
       <updated>1745157096606</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Подключение RSA">
+      <option name="closed" value="true" />
+      <created>1745161918864</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1745161918864</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Подключение RSA - хранение секретного ключа">
+      <option name="closed" value="true" />
+      <created>1745163663055</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1745163663055</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Подключение RSA - подсчёт голосов">
+      <option name="closed" value="true" />
+      <created>1745165242456</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1745165242456</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Проверка голоса в результатах">
+      <option name="closed" value="true" />
+      <created>1745165653141</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1745165653141</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Кнопка + в моб версии">
+      <option name="closed" value="true" />
+      <created>1745165821522</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1745165821522</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Космитические улучшения">
+      <option name="closed" value="true" />
+      <created>1745166249054</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1745166249054</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Вы успешно проголосовали за вариант">
+      <option name="closed" value="true" />
+      <created>1745167000464</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1745167000464</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -129,6 +187,13 @@
     <MESSAGE value="Визуальные улучшения сайта" />
     <MESSAGE value="Мобильное лого" />
     <MESSAGE value="Переход на Postgres + Fast API" />
-    <option name="LAST_COMMIT_MESSAGE" value="Переход на Postgres + Fast API" />
+    <MESSAGE value="Подключение RSA" />
+    <MESSAGE value="Подключение RSA - хранение секретного ключа" />
+    <MESSAGE value="Подключение RSA - подсчёт голосов" />
+    <MESSAGE value="Проверка голоса в результатах" />
+    <MESSAGE value="Кнопка + в моб версии" />
+    <MESSAGE value="Космитические улучшения" />
+    <MESSAGE value="Вы успешно проголосовали за вариант" />
+    <option name="LAST_COMMIT_MESSAGE" value="Вы успешно проголосовали за вариант" />
   </component>
 </project>

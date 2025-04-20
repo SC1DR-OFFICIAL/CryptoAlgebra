@@ -3,7 +3,7 @@ import datetime
 import json
 
 import asyncpg
-from fastapi import FastAPI, Request, Form, Depends, status, Response
+from fastapi import FastAPI, Request, Form, Depends, status, Response, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -194,9 +194,9 @@ async def create_poll_post(
 # --- Голосование ---
 @app.get("/poll/{poll_id}", response_class=HTMLResponse)
 async def vote_get(
-    request: Request,
-    poll_id: int,
-    conn=Depends(get_conn)
+        request: Request,
+        poll_id: int,
+        conn=Depends(get_conn)
 ):
     user_id = request.session.get("user_id")
     if not user_id:
@@ -210,10 +210,10 @@ async def vote_get(
     if not poll:
         return HTMLResponse("Голосование не найдено", status_code=404)
 
-    title       = poll["title"]
-    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    title = poll["title"]
+    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     private_key = deserialize_private_key(poll["private_key"], public_key)
-    end_date    = poll["end_date"]
+    end_date = poll["end_date"]
 
     # Варианты ответов
     options = await conn.fetch(
@@ -221,7 +221,7 @@ async def vote_get(
         poll_id
     )
     # Статус голосования
-    now       = datetime.datetime.now().isoformat()
+    now = datetime.datetime.now().isoformat()
     is_closed = now >= end_date
 
     # Старая запись — для pre‑selection
@@ -239,7 +239,7 @@ async def vote_get(
                 break
 
     # Параметр из POST‑редиректа ?voted=ID
-    voted_id   = request.query_params.get("voted")
+    voted_id = request.query_params.get("voted")
     voted_text = None
     if voted_id:
         for opt_id, opt_text in options:
@@ -260,72 +260,105 @@ async def vote_get(
     })
 
 
-@app.post("/poll/{poll_id}")
+@app.post("/poll/{poll_id}", response_class=HTMLResponse)
 async def vote_post(
-        request: Request,
-        poll_id: int,
-        selected_option: int = Form(..., alias="option"),
-        priv_key_pem: str = Form(..., alias="priv_key"),
-        conn=Depends(get_conn)
+    request: Request,
+    poll_id: int,
+    selected_option: int = Form(..., alias="option"),
+    priv_key_pem: str     = Form(..., alias="priv_key"),
+    conn=Depends(get_conn)
 ):
     user_id = request.session.get("user_id")
     if not user_id:
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse("/login", status_code=303)
 
-    # 1) Проверяем статус голосования
-    poll = await conn.fetchrow(
-        "SELECT public_key_n, end_date FROM poll WHERE id = $1",
-        poll_id
-    )
+    # Проверяем открытость голосования
+    poll = await conn.fetchrow("SELECT public_key_n, end_date FROM poll WHERE id=$1", poll_id)
     now = datetime.datetime.now().isoformat()
     if now >= poll["end_date"]:
-        return HTMLResponse("Голосование завершено.", status_code=400)
+        return await _render_vote_page(request, poll_id, conn, "Голосование уже завершено.")
 
-    # 2) Собираем список вариантов
-    options = await conn.fetch(
-        "SELECT id FROM poll_options WHERE poll_id = $1 ORDER BY id",
-        poll_id
-    )
-
-    # 3) Строим вектор шифротекстов
-    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
-    ciphertexts = []
-    for opt in options:
-        v = 1 if opt["id"] == selected_option else 0
-        ciphertexts.append(str(public_key.encrypt(v).ciphertext()))
-
-    # 4) Подписываем JSON-массив
-    msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ciphertexts)}"
-    h = SHA256.new(msg.encode())
+    # Импорт приватного ключа
     try:
         priv = RSA.import_key(priv_key_pem)
-        signature = pkcs1_15.new(priv).sign(h).hex()
     except Exception:
-        return HTMLResponse("Неверный формат приватного ключа.", status_code=400)
+        return await _render_vote_page(request, poll_id, conn, "Неверный формат приватного ключа.")
 
+    # Сверяем ключи по n/e
+    stored_pub_pem = await conn.fetchval('SELECT rsa_public_key FROM "user" WHERE id=$1', user_id)
+    stored_pub     = RSA.import_key(stored_pub_pem)
+    user_pub       = priv.publickey()
+    if stored_pub.n != user_pub.n or stored_pub.e != user_pub.e:
+        return await _render_vote_page(request, poll_id, conn, "Этот приватный ключ не соответствует вашему аккаунту.")
+
+    # Всё ок, шифруем + подписываем + сохраняем
+    options = await conn.fetch("SELECT id FROM poll_options WHERE poll_id=$1 ORDER BY id", poll_id)
+    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    ciphertexts = [str(public_key.encrypt(1 if opt["id"]==selected_option else 0).ciphertext())
+                   for opt in options]
+    msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ciphertexts)}"
+    h   = SHA256.new(msg.encode())
+    signature = pkcs1_15.new(priv).sign(h).hex()
     data = json.dumps(ciphertexts)
 
-    # 5) Сохраняем или обновляем голос
-    prev = await conn.fetchrow(
-        "SELECT id FROM vote WHERE poll_id=$1 AND user_id=$2",
-        poll_id, user_id
-    )
+    prev = await conn.fetchrow("SELECT id FROM vote WHERE poll_id=$1 AND user_id=$2", poll_id, user_id)
     if prev:
-        await conn.execute(
-            "UPDATE vote SET ciphertexts=$1, signature=$2 WHERE id=$3",
-            data, signature, prev["id"]
-        )
+        await conn.execute("UPDATE vote SET ciphertexts=$1, signature=$2 WHERE id=$3",
+                           data, signature, prev["id"])
     else:
         await conn.execute(
-            "INSERT INTO vote(poll_id, user_id, ciphertexts, signature) "
-            "VALUES ($1,$2,$3,$4)",
-            poll_id, user_id, data, signature
+          "INSERT INTO vote(poll_id,user_id,ciphertexts,signature) VALUES($1,$2,$3,$4)",
+          poll_id, user_id, data, signature
         )
 
-    return RedirectResponse(
-        url=f"/poll/{poll_id}?voted={selected_option}",
-        status_code=status.HTTP_303_SEE_OTHER
+    # Редирект, чтобы показать Alert об успехе
+    return RedirectResponse(f"/poll/{poll_id}?voted={selected_option}", status_code=303)
+
+
+async def _render_vote_page(request: Request, poll_id: int, conn, error_message: str):
+    """
+    Общая функция для отображения страницы голосования с переданным сообщением об ошибке.
+    """
+    # Повторяем логику vote_get для контекста
+    poll = await conn.fetchrow(
+        "SELECT title, public_key_n, private_key, end_date FROM poll WHERE id = $1",
+        poll_id
     )
+    title       = poll["title"]
+    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    private_key = deserialize_private_key(poll["private_key"], public_key)
+    end_date    = poll["end_date"]
+
+    options = await conn.fetch(
+        "SELECT id, option_text FROM poll_options WHERE poll_id = $1 ORDER BY id",
+        poll_id
+    )
+    now       = datetime.datetime.now().isoformat()
+    is_closed = now >= end_date
+
+    prev = await conn.fetchrow(
+        "SELECT ciphertexts FROM vote WHERE poll_id = $1 AND user_id = $2",
+        poll_id, request.session.get("user_id")
+    )
+    previous_vote = None
+    if prev:
+        arr = json.loads(prev["ciphertexts"])
+        for (opt_id, _), cstr in zip(options, arr):
+            if private_key.decrypt(paillier.EncryptedNumber(public_key, int(cstr))) == 1:
+                previous_vote = opt_id
+                break
+
+    return templates.TemplateResponse("vote.html", {
+        "request": request,
+        "title": title,
+        "poll_id": poll_id,
+        "options": options,
+        "previous_vote": previous_vote,
+        "is_closed": is_closed,
+        "can_change": not is_closed,
+        "voted_text": None,
+        "error_message": error_message
+    })
 
 
 # --- Результаты ---
@@ -388,10 +421,10 @@ async def verify_vote_get(request: Request, poll_id: int):
 
 @app.post("/poll/{poll_id}/verify", response_class=HTMLResponse)
 async def verify_vote_post(
-    request: Request,
-    poll_id: int,
-    priv_key_pem: str = Form(..., alias="priv_key"),
-    conn=Depends(get_conn)
+        request: Request,
+        poll_id: int,
+        priv_key_pem: str = Form(..., alias="priv_key"),
+        conn=Depends(get_conn)
 ):
     user_id = request.session.get("user_id")
     if not user_id:
@@ -407,8 +440,8 @@ async def verify_vote_post(
 
     # 2) Верифицируем подпись
     ct_list = json.loads(row["ciphertexts"])
-    msg     = f"poll:{poll_id};user:{user_id};choices:{','.join(ct_list)}"
-    h       = SHA256.new(msg.encode())
+    msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ct_list)}"
+    h = SHA256.new(msg.encode())
     pub_pem = await conn.fetchval('SELECT rsa_public_key FROM "user" WHERE id=$1', user_id)
     try:
         pkcs1_15.new(RSA.import_key(pub_pem)).verify(h, bytes.fromhex(row["signature"]))
@@ -417,7 +450,7 @@ async def verify_vote_post(
 
     # 3) Дешифруем вектор и находим выбранный вариант
     poll = await conn.fetchrow("SELECT public_key_n, private_key FROM poll WHERE id=$1", poll_id)
-    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     private_key = deserialize_private_key(poll["private_key"], public_key)
 
     chosen_opt_id = None

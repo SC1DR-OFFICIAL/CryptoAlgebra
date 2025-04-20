@@ -35,7 +35,7 @@
     </p>
   {% endif %}
 
-  {# если после POST#редиректа есть voted_text — покажем алерт и уедем на главную #}
+  {# Скрипт для показа успеха #}
   {% if voted_text %}
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -49,4 +49,14 @@
       });
     </script>
   {% endif %}
+
+  {# Вот блок для ошибок, вставляйте именно сюда: #}
+  {% if error_message %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        alert({{ error_message|tojson }});
+      });
+    </script>
+  {% endif %}
+
 {% endblock %}
