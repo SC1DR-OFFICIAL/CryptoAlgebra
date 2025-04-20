@@ -1,16 +1,21 @@
 # main.py
 import datetime
 
+import asyncpg
 from fastapi import FastAPI, Request, Form, Depends, status
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-
-import asyncpg
-from werkzeug.security import generate_password_hash, check_password_hash
-from encryption import generate_homomorphic_keypair, serialize_private_key, deserialize_private_key
 from phe import paillier
+from starlette.middleware.sessions import SessionMiddleware
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from encryption import generate_homomorphic_keypair, serialize_private_key, deserialize_private_key
+
+from Crypto.PublicKey    import RSA
+from Crypto.Signature    import pkcs1_15
+from Crypto.Hash         import SHA256
+
 
 # --- Настройки FastAPI ---
 app = FastAPI()
@@ -71,10 +76,19 @@ async def register_post(
         password: str = Form(...),
         conn=Depends(get_conn)
 ):
+    # 1) Хешируем пароль
     password_hash = generate_password_hash(password)
+
+    # 2) Генерируем RSA‑ключи
+    rsa_key = RSA.generate(2048)
+    private_pem = rsa_key.export_key().decode()
+    public_pem = rsa_key.publickey().export_key().decode()
+
+    # 3) Сохраняем в сессии приватный ключ, в БД — публичный
+    request.session["rsa_private_key"] = private_pem
     await conn.execute(
-        "INSERT INTO \"user\" (username, password_hash) VALUES ($1, $2)",
-        username, password_hash
+        'INSERT INTO "user" (username, password_hash, rsa_public_key) VALUES ($1, $2, $3)',
+        username, password_hash, public_pem
     )
     return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -213,19 +227,26 @@ async def vote_post(
     public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     encrypted = public_key.encrypt(1).ciphertext()
 
+    # --- Формируем сообщение и подписываем его приватным ключом из сессии ---
+    msg = f"poll:{poll_id};user:{user_id};option:{option}"
+    h = SHA256.new(msg.encode())
+    priv = RSA.import_key(request.session["rsa_private_key"])
+    signature = pkcs1_15.new(priv).sign(h).hex()
+
     prev = await conn.fetchrow(
         "SELECT id FROM vote WHERE poll_id=$1 AND user_id=$2",
         poll_id, user_id
     )
+
     if prev:
         await conn.execute(
-            "UPDATE vote SET option_id=$1, encrypted_vote=$2 WHERE id=$3",
-            option, str(encrypted), prev["id"]
+            "UPDATE vote SET option_id=$1, encrypted_vote=$2, signature=$3 WHERE id=$4",
+            option, str(encrypted), signature, prev["id"]
         )
     else:
         await conn.execute(
-            "INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote) VALUES ($1,$2,$3,$4)",
-            poll_id, user_id, option, str(encrypted)
+            "INSERT INTO vote (poll_id, user_id, option_id, encrypted_vote, signature) VALUES ($1,$2,$3,$4,$5)",
+            poll_id, user_id, option, str(encrypted), signature
         )
 
     return RedirectResponse(url=f"/poll/{poll_id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -250,18 +271,29 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
     )
     results: dict[str, int] = {}
 
+    # Сначала верифицируем подписи и отбираем валидные
     for opt in options:
-        votes = await conn.fetch(
-            "SELECT encrypted_vote FROM vote WHERE poll_id=$1 AND option_id=$2",
-            poll_id, opt["id"]
-        )
-        if not votes:
-            results[opt["option_text"]] = 0
-            continue
+        rows = await conn.fetch("SELECT user_id, encrypted_vote, signature FROM vote WHERE poll_id=$1 AND option_id=$2",
+                                poll_id, opt["id"])
+        valid_enc = []
+        for row in rows:
+            msg = f"poll:{poll_id};user:{row['user_id']};option:{opt['id']}"
+            h = SHA256.new(msg.encode())
+            # получаем публичный ключ голосующего
+            user_pub = await conn.fetchval('SELECT rsa_public_key FROM "user" WHERE id=$1', row["user_id"])
+            try:
+                pkcs1_15.new(RSA.import_key(user_pub)).verify(h, bytes.fromhex(row["signature"]))
+                # подпись верна — учитываем голос
+                valid_enc.append(paillier.EncryptedNumber(public_key, int(row["encrypted_vote"])))
+            except (ValueError, TypeError):
+                # подпись неверна — пропускаем
+                continue
 
-        enc_votes = [paillier.EncryptedNumber(public_key, int(v["encrypted_vote"])) for v in votes]
-        total = sum(enc_votes)
-        results[opt["option_text"]] = private_key.decrypt(total)
+        if valid_enc:
+            total = sum(valid_enc)
+            results[opt["option_text"]] = private_key.decrypt(total)
+        else:
+            results[opt["option_text"]] = 0
 
     return templates.TemplateResponse("results.html", {
         "request": request,

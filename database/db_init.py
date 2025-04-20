@@ -25,6 +25,7 @@ async def init_db():
     CREATE TABLE IF NOT EXISTS "user" (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
+        rsa_public_key TEXT,
         password_hash TEXT NOT NULL,
         is_admin BOOLEAN NOT NULL DEFAULT FALSE
     );
@@ -58,7 +59,8 @@ async def init_db():
         poll_id INTEGER NOT NULL REFERENCES poll(id) ON DELETE CASCADE,
         user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
         option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
-        encrypted_vote TEXT NOT NULL
+        encrypted_vote TEXT NOT NULL,
+        signature TEXT
     );
     ''')
 
