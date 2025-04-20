@@ -1,33 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Результаты голосования{% endblock %}
 {% block content %}
-<h2 class="mb-4">Результаты голосования</h2>
+  <h2 class="mb-4">Результаты голосования</h2>
 
-{% if results %}
+  {% if results %}
     <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Вариант</th>
-                <th>Голосов</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for option, count in results.items() %}
-                <tr>
-                    <td>{{ option }}</td>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
+      <thead>
+        <tr>
+          <th>Вариант</th>
+          <th>Голосов</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for option, count in results.items() %}
+          <tr>
+            <td>{{ option }}</td>
+            <td>{{ count }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
-{% else %}
+  {% else %}
     <p class="text-muted">Голосов пока нет</p>
-{% endif %}
+  {% endif %}
 
-<a href="{{ request.url_for('index') }}" class="btn btn-primary">
-  Вернуться на главную
-</a>
-<a href="{{ request.url_for('verify_vote_get', poll_id=poll_id) }}" class="btn btn-secondary ms-2">
-  Проверить мой голос
-</a>
+  <div class="d-flex flex-column flex-md-row">
+    <a href="{{ request.url_for('index') }}"
+       class="btn btn-primary flex-fill mb-2 mb-md-0 me-md-2">
+      Вернуться на главную
+    </a>
+    <a href="{{ request.url_for('verify_vote_get', poll_id=poll_id) }}"
+       class="btn btn-secondary flex-fill">
+      Проверить мой голос
+    </a>
+  </div>
 {% endblock %}

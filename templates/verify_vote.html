@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Проверить мой голос{% endblock %}
+{% block title %}Проверка моего голоса{% endblock %}
 {% block content %}
   <h2 class="mb-4">Проверка вашего голоса в опросе {{ poll_id }}</h2>
 
@@ -13,16 +13,26 @@
   {% else %}
     <form method="post" class="card p-4">
       <div class="mb-3">
-        <label class="form-label">Вставьте ваш приватный RSA‑ключ для подписи:</label>
+        <label class="form-label">
+          Вставьте ваш приватный RSA‑ключ для подписи:
+        </label>
         <textarea name="priv_key"
                   class="form-control"
                   rows="6"
                   placeholder="-----BEGIN RSA PRIVATE KEY----- …"
                   required></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Проверить голос</button>
-      <a href="{{ request.url_for('poll_results', poll_id=poll_id) }}"
-         class="btn btn-secondary ms-2">Отмена</a>
+
+      <div class="d-flex flex-column flex-md-row">
+        <button type="submit"
+                class="btn btn-primary flex-fill mb-2 mb-md-0 me-md-2">
+          Проверить голос
+        </button>
+        <a href="{{ request.url_for('poll_results', poll_id=poll_id) }}"
+           class="btn btn-secondary flex-fill">
+          Отмена
+        </a>
+      </div>
     </form>
   {% endif %}
 {% endblock %}
