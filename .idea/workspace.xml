@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="pycryptodome&gt;=3.17" />
+    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="python-multipart&gt;=0.0.6" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -167,7 +167,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745213455959</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="python-multipart&gt;=0.0.6">
+      <option name="closed" value="true" />
+      <created>1745213592582</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1745213592582</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -191,6 +199,7 @@
     <MESSAGE value="Удаление лишний вариантов при создании голосования" />
     <MESSAGE value="Новые голосования появляются в начале списка" />
     <MESSAGE value="pycryptodome&gt;=3.17" />
-    <option name="LAST_COMMIT_MESSAGE" value="pycryptodome&gt;=3.17" />
+    <MESSAGE value="python-multipart&gt;=0.0.6" />
+    <option name="LAST_COMMIT_MESSAGE" value="python-multipart&gt;=0.0.6" />
   </component>
 </project>

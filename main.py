@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+from contextlib import asynccontextmanager
 
 import asyncpg
 from Crypto.Hash import SHA256
@@ -18,13 +19,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from encryption import generate_homomorphic_keypair, deserialize_private_key, serialize_private_key
 
-# --- Настройки FastAPI ---
-app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="secret_key_for_session")
-
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # --- Конфиг подключения к Postgres на Beget ---
 DB_CONFIG = {
     "host": "quumdrafueyun.beget.app",
@@ -35,15 +29,28 @@ DB_CONFIG = {
 }
 
 
-# --- Стартап и шутдаун: создаём пул соединений ---
-@app.on_event("startup")
-async def startup():
+# --- Lifespan: пул соединений на стартап и шутдаун ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # при старте создаём пул
     app.state.db_pool = await asyncpg.create_pool(**DB_CONFIG)
-
-
-@app.on_event("shutdown")
-async def shutdown():
+    yield
+    # при завершении закрываем
     await app.state.db_pool.close()
+
+
+# --- Настройки FastAPI ---
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(SessionMiddleware, secret_key="secret_key_for_session")
+
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# --- Зависимость для получения соединения ---
+async def get_conn():
+    async with app.state.db_pool.acquire() as conn:
+        yield conn
 
 
 # --- Зависимость для получения соединения ---
@@ -319,7 +326,7 @@ async def vote_post(
     )
 
     # 3) Формируем вектор шифротекстов
-    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     ciphertexts = [
         str(public_key.encrypt(1 if opt["id"] == selected_option else 0).ciphertext())
         for opt in options
@@ -327,10 +334,10 @@ async def vote_post(
 
     # 4) Подписываем сообщение и проверяем приватный ключ
     msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ciphertexts)}"
-    h   = SHA256.new(msg.encode())
+    h = SHA256.new(msg.encode())
 
     try:
-        priv = RSA.import_key(priv_key_pem)          # ← приватный ключ пользователя
+        priv = RSA.import_key(priv_key_pem)  # ← приватный ключ пользователя
     except (ValueError, IndexError, TypeError):
         return HTMLResponse("Неверный формат приватного ключа.", status_code=400)
 
@@ -349,7 +356,6 @@ async def vote_post(
 
     # Сравниваем параметры n и e
     if priv.n != stored_pub.n or priv.e != stored_pub.e:
-
         # --- НОВАЯ проверка соответствия приватного ⇄ публичного ---
         stored_pub_pem = await conn.fetchval(
             'SELECT rsa_public_key FROM "user" WHERE id=$1', user_id)
@@ -420,8 +426,8 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
     if not poll:
         return HTMLResponse("Голосование не найдено", status_code=404)
 
-    public_key  = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
-    private_key = load_private_key(poll_id, public_key)   # /var/secure/keys/…
+    public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
+    private_key = load_private_key(poll_id, public_key)  # /var/secure/keys/…
 
     # 2) Варианты ответа
     options = await conn.fetch(
@@ -439,11 +445,11 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
     )
 
     for row in rows:
-        ct_list   = json.loads(row["ciphertexts"])
+        ct_list = json.loads(row["ciphertexts"])
 
         # --- Проверяем подпись бюллетеня ---
-        msg        = f"poll:{poll_id};user:{row['user_id']};choices:{','.join(ct_list)}"
-        h          = SHA256.new(msg.encode())
+        msg = f"poll:{poll_id};user:{row['user_id']};choices:{','.join(ct_list)}"
+        h = SHA256.new(msg.encode())
         user_pub_pem = await conn.fetchval(
             'SELECT rsa_public_key FROM "user" WHERE id=$1',
             row["user_id"],
@@ -481,7 +487,7 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
 async def verify_vote_get(
         request: Request,
         poll_id: int,
-        conn = Depends(get_conn)           # ← нужно подключение
+        conn=Depends(get_conn)  # ← нужно подключение
 ):
     # требуем авторизацию
     if not request.session.get("user_id"):
@@ -500,7 +506,7 @@ async def verify_vote_get(
         {
             "request": request,
             "poll_id": poll_id,
-            "title": poll["title"],       # ← передаём в шаблон
+            "title": poll["title"],  # ← передаём в шаблон
         },
     )
 
