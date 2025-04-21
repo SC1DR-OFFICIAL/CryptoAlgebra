@@ -38,8 +38,7 @@ async def init_db():
         title TEXT NOT NULL,
         end_date TEXT NOT NULL,
         public_key_n TEXT,
-        public_key_g TEXT,
-        private_key TEXT
+        public_key_g TEXT
     );
     ''')
 
