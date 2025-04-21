@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="Удаление лишний вариантов при создании голосования">
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-    </list>
+    <list default="true" id="0d3ef6b8-f49f-4b34-9906-da5788fcf6b0" name="Changes" comment="Новые голосования появляются в начале списка" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -153,7 +151,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745208707608</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Новые голосования появляются в начале списка">
+      <option name="closed" value="true" />
+      <created>1745208932723</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1745208932723</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -175,6 +181,7 @@
     <MESSAGE value="Проверка своего голоса в результатах" />
     <MESSAGE value="Проверка вашего голоса в опросе «Голосование»" />
     <MESSAGE value="Удаление лишний вариантов при создании голосования" />
-    <option name="LAST_COMMIT_MESSAGE" value="Удаление лишний вариантов при создании голосования" />
+    <MESSAGE value="Новые голосования появляются в начале списка" />
+    <option name="LAST_COMMIT_MESSAGE" value="Новые голосования появляются в начале списка" />
   </component>
 </project>
