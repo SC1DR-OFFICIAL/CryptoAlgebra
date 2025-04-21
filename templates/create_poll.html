@@ -16,9 +16,15 @@
 
     <div class="mb-3">
         <label class="form-label">Варианты ответов:</label>
+
         <div id="options">
-            <input type="text" name="options" class="form-control mb-2" required>
+            <!-- первая строка -->
+            <div class="input-group mb-2 option-row">
+                <input type="text" name="options" class="form-control" required>
+                <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)">×</button>
+            </div>
         </div>
+
         <button type="button" class="btn btn-secondary" onclick="addOption()">Добавить вариант</button>
     </div>
 
@@ -27,13 +33,37 @@
 
 <script>
 function addOption() {
-    let div = document.getElementById("options");
-    let input = document.createElement("input");
-    input.type = "text";
-    input.name = "options";
-    input.className = "form-control mb-2";
+    const container = document.getElementById('options');
+
+    const row = document.createElement('div');
+    row.className = 'input-group mb-2 option-row';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'options';
+    input.className = 'form-control';
     input.required = true;
-    div.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-outline-danger';
+    btn.textContent = '×';
+    btn.onclick = function () {
+        removeOption(btn);
+    };
+
+    row.appendChild(input);
+    row.appendChild(btn);
+
+    container.appendChild(row);
+}
+
+function removeOption(button) {
+    const container = document.getElementById('options');
+    // Не разрешаем удалить последний оставшийся вариант
+    if (container.querySelectorAll('.option-row').length > 1) {
+        button.parentElement.remove();
+    }
 }
 </script>
 {% endblock %}
