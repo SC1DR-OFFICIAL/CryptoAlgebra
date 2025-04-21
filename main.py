@@ -478,14 +478,31 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
 
 
 @app.get("/poll/{poll_id}/verify", response_class=HTMLResponse)
-async def verify_vote_get(request: Request, poll_id: int):
-    # убедимся, что пользователь залогинен
+async def verify_vote_get(
+        request: Request,
+        poll_id: int,
+        conn = Depends(get_conn)           # ← нужно подключение
+):
+    # требуем авторизацию
     if not request.session.get("user_id"):
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse("verify_vote.html", {
-        "request": request,
-        "poll_id": poll_id
-    })
+
+    # берём название опроса
+    poll = await conn.fetchrow(
+        "SELECT title FROM poll WHERE id=$1",
+        poll_id,
+    )
+    if not poll:
+        return HTMLResponse("Опрос не найден.", status_code=404)
+
+    return templates.TemplateResponse(
+        "verify_vote.html",
+        {
+            "request": request,
+            "poll_id": poll_id,
+            "title": poll["title"],       # ← передаём в шаблон
+        },
+    )
 
 
 # --- Проверка голоса ---
@@ -496,47 +513,38 @@ async def verify_vote_post(
         priv_key_pem: str = Form(..., alias="priv_key"),
         conn=Depends(get_conn)
 ):
-    import logging                         # гарантируем, что логгер доступен
+    import logging
     log = logging.getLogger("uvicorn.error")
 
-    # 0) Требуем авторизацию
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-    # 1‑a) Загружаем и валидируем присланный приватный ключ
+    # Проверяем соответствие приватного и публичного ключа
     try:
         priv = RSA.import_key(priv_key_pem)
     except (ValueError, IndexError, TypeError):
         return HTMLResponse("Неверный формат приватного ключа.", status_code=400)
 
     stored_pub_pem = await conn.fetchval(
-        'SELECT rsa_public_key FROM "user" WHERE id=$1',
-        user_id,
+        'SELECT rsa_public_key FROM "user" WHERE id=$1', user_id
     )
-    if not stored_pub_pem:
-        return HTMLResponse("В вашем профиле отсутствует публичный ключ.", status_code=400)
-
     try:
         stored_pub = RSA.import_key(stored_pub_pem)
     except (ValueError, IndexError, TypeError):
         return HTMLResponse("Сохранённый публичный ключ повреждён.", status_code=500)
 
     if priv.n != stored_pub.n or priv.e != stored_pub.e:
-        # ------ DEBUG ------
         log.warning(
             "VERIFY‑RSA mismatch user=%s\npriv.n=%s\npriv.e=%s\npub .n=%s\npub .e=%s",
-            user_id,
-            hex(priv.n)[:80], priv.e,
-            hex(stored_pub.n)[:80], stored_pub.e,
+            user_id, hex(priv.n)[:80], priv.e, hex(stored_pub.n)[:80], stored_pub.e,
         )
-        # -------------------
         return HTMLResponse(
             "Приватный ключ не соответствует вашему публичному ключу.",
             status_code=400,
         )
 
-    # 1‑b) Достаём зашифрованный бюллетень и подпись пользователя
+    # Достаём зашифрованный бюллетень и подпись пользователя
     row = await conn.fetchrow(
         "SELECT ciphertexts, signature FROM vote WHERE poll_id=$1 AND user_id=$2",
         poll_id,
@@ -545,7 +553,6 @@ async def verify_vote_post(
     if not row:
         return HTMLResponse("Ваш голос не найден.", status_code=404)
 
-    # 2) Проверяем подпись бюллетеня
     ct_list = json.loads(row["ciphertexts"])
     msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ct_list)}"
     h = SHA256.new(msg.encode())
@@ -557,18 +564,23 @@ async def verify_vote_post(
             status_code=400,
         )
 
-    # 3) Берём публичный ключ опроса и загружаем приватный из защищённого каталога
+    # Получаем название опроса + Paillier ключ
     poll = await conn.fetchrow(
-        "SELECT public_key_n FROM poll WHERE id=$1",
+        "SELECT title, public_key_n FROM poll WHERE id=$1",
         poll_id,
     )
+    if not poll:
+        return HTMLResponse("Опрос не найден.", status_code=404)
+    title = poll["title"]
     public_key = paillier.PaillierPublicKey(n=int(poll["public_key_n"]))
     private_key = load_private_key(poll_id, public_key)
 
-    # 4) Расшифровываем вектор, ищем позицию единицы
+    # Расшифровка
     chosen_opt_id = None
     for idx, cstr in enumerate(ct_list):
-        val = private_key.decrypt(paillier.EncryptedNumber(public_key, int(cstr)))
+        val = private_key.decrypt(
+            paillier.EncryptedNumber(public_key, int(cstr))
+        )
         if val == 1:
             chosen_opt_id = idx
             break
@@ -576,7 +588,6 @@ async def verify_vote_post(
     if chosen_opt_id is None:
         return HTMLResponse("Не удалось определить ваш выбор.", status_code=400)
 
-    # 5) Получаем текст выбранного варианта
     option = await conn.fetchrow(
         """
         SELECT option_text
@@ -595,6 +606,7 @@ async def verify_vote_post(
         {
             "request": request,
             "poll_id": poll_id,
+            "title": title,  # ← теперь передаётся в шаблон
             "chosen": option["option_text"],
         },
     )

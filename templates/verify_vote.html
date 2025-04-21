@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Проверка моего голоса{% endblock %}
 {% block content %}
-  <h2 class="mb-4">Проверка вашего голоса в опросе {{ poll_id }}</h2>
+  <h2 class="mb-4">Проверка вашего голоса в опросе «{{ title }}»</h2>
 
   {% if chosen %}
     <div class="alert alert-success">
