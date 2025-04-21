@@ -1,10 +1,14 @@
 # main.py
 import datetime
 import json
+import logging
 import os
 
 import asyncpg
-from fastapi import FastAPI, Request, Form, Depends, status, Response
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from fastapi import FastAPI, Request, Form, Depends, status
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,10 +17,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from encryption import generate_homomorphic_keypair, deserialize_private_key, serialize_private_key
-
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
 
 # --- Настройки FastAPI ---
 app = FastAPI()
@@ -355,7 +355,7 @@ async def vote_post(
             'SELECT rsa_public_key FROM "user" WHERE id=$1', user_id)
 
         # ↓↓↓   вставьте отладку  ↓↓↓
-        import logging, textwrap
+
         logging.warning(
             "DEBUG‑RSA user=%s\npriv.n=%s\npriv.e=%s\npub .n=%s\npub .e=%s",
             user_id, hex(priv.n)[:80], priv.e, hex(RSA.import_key(stored_pub_pem).n)[:80],
@@ -477,7 +477,6 @@ async def poll_results(request: Request, poll_id: int, conn=Depends(get_conn)):
     )
 
 
-
 @app.get("/poll/{poll_id}/verify", response_class=HTMLResponse)
 async def verify_vote_get(request: Request, poll_id: int):
     # убедимся, что пользователь залогинен
@@ -489,6 +488,7 @@ async def verify_vote_get(request: Request, poll_id: int):
     })
 
 
+# --- Проверка голоса ---
 @app.post("/poll/{poll_id}/verify", response_class=HTMLResponse)
 async def verify_vote_post(
         request: Request,
@@ -496,12 +496,47 @@ async def verify_vote_post(
         priv_key_pem: str = Form(..., alias="priv_key"),
         conn=Depends(get_conn)
 ):
+    import logging                         # гарантируем, что логгер доступен
+    log = logging.getLogger("uvicorn.error")
+
     # 0) Требуем авторизацию
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-    # 1) Достаём зашифрованный бюллетень и подпись пользователя
+    # 1‑a) Загружаем и валидируем присланный приватный ключ
+    try:
+        priv = RSA.import_key(priv_key_pem)
+    except (ValueError, IndexError, TypeError):
+        return HTMLResponse("Неверный формат приватного ключа.", status_code=400)
+
+    stored_pub_pem = await conn.fetchval(
+        'SELECT rsa_public_key FROM "user" WHERE id=$1',
+        user_id,
+    )
+    if not stored_pub_pem:
+        return HTMLResponse("В вашем профиле отсутствует публичный ключ.", status_code=400)
+
+    try:
+        stored_pub = RSA.import_key(stored_pub_pem)
+    except (ValueError, IndexError, TypeError):
+        return HTMLResponse("Сохранённый публичный ключ повреждён.", status_code=500)
+
+    if priv.n != stored_pub.n or priv.e != stored_pub.e:
+        # ------ DEBUG ------
+        log.warning(
+            "VERIFY‑RSA mismatch user=%s\npriv.n=%s\npriv.e=%s\npub .n=%s\npub .e=%s",
+            user_id,
+            hex(priv.n)[:80], priv.e,
+            hex(stored_pub.n)[:80], stored_pub.e,
+        )
+        # -------------------
+        return HTMLResponse(
+            "Приватный ключ не соответствует вашему публичному ключу.",
+            status_code=400,
+        )
+
+    # 1‑b) Достаём зашифрованный бюллетень и подпись пользователя
     row = await conn.fetchrow(
         "SELECT ciphertexts, signature FROM vote WHERE poll_id=$1 AND user_id=$2",
         poll_id,
@@ -514,13 +549,8 @@ async def verify_vote_post(
     ct_list = json.loads(row["ciphertexts"])
     msg = f"poll:{poll_id};user:{user_id};choices:{','.join(ct_list)}"
     h = SHA256.new(msg.encode())
-    pub_pem = await conn.fetchval(
-        'SELECT rsa_public_key FROM "user" WHERE id=$1', user_id
-    )
     try:
-        pkcs1_15.new(RSA.import_key(pub_pem)).verify(
-            h, bytes.fromhex(row["signature"])
-        )
+        pkcs1_15.new(stored_pub).verify(h, bytes.fromhex(row["signature"]))
     except (ValueError, TypeError):
         return HTMLResponse(
             "Ошибка: подпись вашего голоса не прошла проверку.",
@@ -538,18 +568,13 @@ async def verify_vote_post(
     # 4) Расшифровываем вектор, ищем позицию единицы
     chosen_opt_id = None
     for idx, cstr in enumerate(ct_list):
-        val = private_key.decrypt(
-            paillier.EncryptedNumber(public_key, int(cstr))
-        )
+        val = private_key.decrypt(paillier.EncryptedNumber(public_key, int(cstr)))
         if val == 1:
             chosen_opt_id = idx
             break
 
     if chosen_opt_id is None:
-        return HTMLResponse(
-            "Не удалось определить ваш выбор.",
-            status_code=400,
-        )
+        return HTMLResponse("Не удалось определить ваш выбор.", status_code=400)
 
     # 5) Получаем текст выбранного варианта
     option = await conn.fetchrow(
