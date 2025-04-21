@@ -55,7 +55,7 @@ async def get_conn():
 # --- Главная страница ---
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, conn=Depends(get_conn)):
-    polls = await conn.fetch("SELECT id, title, end_date FROM poll ORDER BY id")
+    polls = await conn.fetch("SELECT id, title, end_date FROM poll ORDER BY id DESC")
     now = datetime.datetime.now().isoformat()
     return templates.TemplateResponse("index.html", {
         "request": request,
