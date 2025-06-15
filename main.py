@@ -19,13 +19,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from encryption import generate_homomorphic_keypair, deserialize_private_key, serialize_private_key
 
-# --- Конфиг подключения к Postgres на Beget ---
+# --- Конфиг подключения к Postgres ---
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # загружаем .env
+
 DB_CONFIG = {
-    "host": "quumdrafueyun.beget.app",
-    "port": 5432,
-    "user": "cloud_user",
-    "password": "eLT1ApRZ%Fkf",
-    "database": "default_db"
+    "host": os.getenv("DB_HOST"),
+    "port": int(os.getenv("DB_PORT")),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
 }
 
 
@@ -196,7 +201,7 @@ async def create_poll_post(
     poll_id = rec["id"]
 
     # 3) Кладём приватный ключ в защищённый каталог (не в БД!)
-    priv_path = f"/var/secure/keys/poll_{poll_id}.key"
+    priv_path = f"secure_keys/poll_{poll_id}.key"
     os.makedirs(os.path.dirname(priv_path), exist_ok=True)
     with open(priv_path, "w", encoding="utf-8") as f:
         f.write(serialize_private_key(private_key))
@@ -216,7 +221,7 @@ async def create_poll_post(
 
 def load_private_key(poll_id: int, public_key):
     """Читает приватный ключ Paillier для указанного опроса из защищённого каталога."""
-    key_path = f"/var/secure/keys/poll_{poll_id}.key"
+    key_path = f"secure_keys/poll_{poll_id}.key"
     with open(key_path, "r", encoding="utf-8") as f:
         return deserialize_private_key(f.read(), public_key)
 

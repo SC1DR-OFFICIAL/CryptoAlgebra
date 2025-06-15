@@ -2,16 +2,22 @@
 import asyncio
 import asyncpg
 import logging
+from dotenv import load_dotenv
+import os
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# --- Конфиг подключения к Postgres ---
+load_dotenv()  # загружаем .env
+
 DB_CONFIG = {
-    "host": "quumdrafueyun.beget.app",
-    "port": 5432,
-    "user": "cloud_user",
-    "password": "eLT1ApRZ%Fkf",
-    "database": "default_db"
+    "host": os.getenv("DB_HOST"),
+    "port": int(os.getenv("DB_PORT")),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
 }
 
 
